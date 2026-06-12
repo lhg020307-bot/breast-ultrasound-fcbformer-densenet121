@@ -1,0 +1,58 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local env files
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# IDE and local assistant settings
+.idea/
+.vscode/
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Training data, generated images, checkpoints, and experiment outputs
+images/*
+!images/README.md
+outputs/*
+!outputs/README.md
+checkpoints/*
+!checkpoints/README.md
+
+# Large model and result artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pkl
+*.joblib
+*.npy
+*.npz
+*.h5
+*.hdf5
+
+# Logs and temporary exports
+*.log
+logs/
+tmp/
+temp/
+
+# Local backups
+*.backup*
+*.bak
+*.orig
