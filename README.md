@@ -1,49 +1,71 @@
-# FCBFormer + DenseNet121 Breast Ultrasound Pipeline
+# FCBFormer + DenseNet121 Breast Ultrasound Classification
 
-This repository contains a breast ultrasound analysis pipeline for segmentation,
-four-view classification, out-of-fold calibration, and multi-view fusion
-evaluation. The current implementation uses FCBFormer-style segmentation and
-DenseNet121 classification backbones.
+This repository provides the source code for a breast ultrasound analysis
+pipeline that combines lesion segmentation, four-view image construction,
+DenseNet121-based classification, threshold calibration, and multi-view fusion
+evaluation.
 
-## Features
+The project is prepared for competition/research reproducibility. Source code is
+hosted on GitHub, while trained model weights are distributed separately because
+they are large binary files.
 
-- Preprocess ultrasound images and masks.
-- Fine-tune a segmentation model and generate lesion masks.
-- Build four classification views: `full`, `cut_borders`, `border`, and
-  `masked`.
-- Train 5-fold DenseNet121 classifiers for each view.
-- Calibrate thresholds on out-of-fold predictions.
-- Evaluate fixed-weight and OOF-search fusion strategies.
-- Run a single-image frontend for local inference and report export.
+## Code and Model Availability
+
+- Code repository:
+  [https://github.com/lhg020307-bot/breast-ultrasound-fcbformer-densenet121](https://github.com/lhg020307-bot/breast-ultrasound-fcbformer-densenet121)
+- Trained model weights:
+  [Baidu Netdisk](https://pan.baidu.com/s/1LaTKuKrpvP3QYjHU4VIxTg?pwd=s2w8)
+- Extraction code:
+  `s2w8`
+
+The GitHub repository contains code and lightweight documentation only. Datasets,
+trained weights, pretrained checkpoints, generated masks, figures, metrics, and
+other experiment outputs are not committed to Git.
+
+## Method Overview
+
+The pipeline contains five major stages:
+
+1. Ultrasound image preprocessing.
+2. Lesion segmentation with an FCBFormer-style model.
+3. Four-view sample construction:
+   `full`, `cut_borders`, `border`, and `masked`.
+4. Five-fold DenseNet121 classification for each view.
+5. Out-of-fold threshold calibration and multi-view fusion evaluation.
+
+The fusion scripts support fixed-weight Platt fusion and OOF-search weight
+Platt fusion. See [FUSION_SCRIPTS.md](FUSION_SCRIPTS.md) for details.
 
 ## Repository Layout
 
 ```text
 .
-|-- data/                         # Preprocessing, mask generation, and view building
-|-- models/                       # Segmentation model utilities
-|-- tests/                        # Existing pytest checks
-|-- calibrate_threshold.py        # OOF threshold calibration
-|-- evaluate_*fusion.py           # 2-view, 3-view, 4-view fusion evaluation scripts
-|-- evaluate_ensemble.py          # Fixed-weight 4-view ensemble evaluation
+|-- data/                         # Preprocessing, mask generation, and view construction
+|-- models/                       # Segmentation model definition and utilities
+|-- tests/                        # Pytest checks for core utilities and frontend helpers
+|-- calibrate_threshold.py        # OOF threshold and Platt calibration
+|-- evaluate_2view_fusion.py      # Two-view fusion evaluation
+|-- evaluate_3view_fusion.py      # Three-view fusion evaluation
+|-- evaluate_4view_fusion.py      # Four-view fusion evaluation
+|-- evaluate_ensemble.py          # Fixed-weight four-view ensemble evaluation
 |-- frontend_app.py               # Local single-image inference frontend
-|-- organize_fusion_results.py    # Standardizes result folders and ROC plots
-|-- run_combined_pipeline.sh      # End-to-end training/evaluation pipeline
-|-- FUSION_SCRIPTS.md             # Detailed fusion-script notes
-`-- requirements.txt              # Python dependencies
+|-- organize_fusion_results.py    # Standardized result tables and ROC plots
+|-- run_combined_pipeline.sh      # End-to-end training and evaluation script
+|-- requirements.txt              # Python dependencies
+`-- FUSION_SCRIPTS.md             # Fusion experiment notes
 ```
 
-Large runtime artifacts are intentionally excluded from Git:
+The following directories are intentionally kept lightweight in Git:
 
-- `images/`: local datasets, preprocessed images, generated masks, and views.
-- `checkpoints/`: pretrained weights and trained model checkpoints.
-- `outputs/`: metrics, figures, logs, reports, and intermediate predictions.
+```text
+images/       # Local datasets and generated view images
+checkpoints/  # Local pretrained checkpoints
+outputs/      # Local trained models, metrics, logs, and figures
+```
 
-See the README files inside those directories for the expected local contents.
+## Environment
 
-## Environment Setup
-
-Use Python 3.10+ and install the dependencies:
+Python 3.10 or later is recommended.
 
 ```bash
 python -m venv .venv
@@ -61,48 +83,102 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-For GPU training, install the PyTorch build that matches your CUDA version from
-the official PyTorch installation guide before installing the rest of the
-requirements.
+For GPU training or inference, install a PyTorch build that matches the local
+CUDA version before installing the remaining dependencies.
 
-## Data and Weights
+## Model Weights
 
-Prepare the following local files before running the full pipeline:
+Download the trained model package from Baidu Netdisk:
+
+```text
+Link: https://pan.baidu.com/s/1LaTKuKrpvP3QYjHU4VIxTg?pwd=s2w8
+Extraction code: s2w8
+```
+
+The uploaded package is organized as:
+
+```text
+trained_models/
+|-- segmentation/
+|   `-- best.pt
+|-- classification/
+|   |-- cls_full_densenet121_fold0_best.pt
+|   |-- ...
+|   `-- cls_masked_densenet121_fold4_best.pt
+|-- calibration/
+|   `-- threshold_calibration.json
+`-- FCBFormer_checkpoint.pt
+```
+
+After downloading, place the files under the local project as follows:
+
+```text
+checkpoints/pretrained/FCBFormer_checkpoint.pt
+outputs/models/segmentation/best.pt
+outputs/models/classification/cls_full_densenet121_fold0_best.pt
+outputs/models/classification/cls_full_densenet121_fold1_best.pt
+outputs/models/classification/cls_full_densenet121_fold2_best.pt
+outputs/models/classification/cls_full_densenet121_fold3_best.pt
+outputs/models/classification/cls_full_densenet121_fold4_best.pt
+outputs/models/classification/cls_cut_borders_densenet121_fold0_best.pt
+outputs/models/classification/cls_cut_borders_densenet121_fold1_best.pt
+outputs/models/classification/cls_cut_borders_densenet121_fold2_best.pt
+outputs/models/classification/cls_cut_borders_densenet121_fold3_best.pt
+outputs/models/classification/cls_cut_borders_densenet121_fold4_best.pt
+outputs/models/classification/cls_border_densenet121_fold0_best.pt
+outputs/models/classification/cls_border_densenet121_fold1_best.pt
+outputs/models/classification/cls_border_densenet121_fold2_best.pt
+outputs/models/classification/cls_border_densenet121_fold3_best.pt
+outputs/models/classification/cls_border_densenet121_fold4_best.pt
+outputs/models/classification/cls_masked_densenet121_fold0_best.pt
+outputs/models/classification/cls_masked_densenet121_fold1_best.pt
+outputs/models/classification/cls_masked_densenet121_fold2_best.pt
+outputs/models/classification/cls_masked_densenet121_fold3_best.pt
+outputs/models/classification/cls_masked_densenet121_fold4_best.pt
+outputs/results/competition/threshold_calibration.json
+```
+
+Only the `*_best.pt` classification checkpoints are required for the provided
+evaluation and frontend inference scripts.
+
+## Data Preparation
+
+The dataset is not included in this repository. Prepare the local data according
+to the following structure before training or full reproduction:
 
 ```text
 images/full_image/
 images/gt_masks/
-checkpoints/pretrained/FCBFormer_checkpoint.pt
 ```
 
-The scripts also generate and consume these local outputs:
+The preprocessing and view-construction scripts will generate additional local
+files under:
 
 ```text
 images/preprocessed/
 images/finetuned/
-outputs/models/
 outputs/results/
 ```
 
-Do not upload private medical images, generated masks, trained weights, or large
-experiment outputs to GitHub unless you have explicit permission and a clear
-data-sharing policy.
+Medical image data may be subject to privacy, license, or competition-specific
+sharing rules. Please follow the relevant data-use policy when preparing or
+redistributing datasets.
 
-## End-to-End Pipeline
+## Running the Full Pipeline
 
-The complete training and evaluation workflow is wrapped by:
+Run the complete training and evaluation workflow:
 
 ```bash
 bash run_combined_pipeline.sh
 ```
 
-Useful environment overrides:
+Common overrides:
 
 ```bash
 BACKBONE=densenet121 N_SPLITS=5 MAX_EPOCHS=30 SEG_EPOCHS=50 bash run_combined_pipeline.sh
 ```
 
-For a quick smoke run on a smaller setup:
+For a short smoke run:
 
 ```bash
 N_SPLITS=3 MAX_EPOCHS=2 SEG_EPOCHS=2 BATCH_SIZE=4 bash run_combined_pipeline.sh
@@ -110,7 +186,8 @@ N_SPLITS=3 MAX_EPOCHS=2 SEG_EPOCHS=2 BATCH_SIZE=4 bash run_combined_pipeline.sh
 
 ## Fusion Evaluation
 
-After the model predictions and OOF outputs exist, run the fusion scripts:
+If trained models, OOF predictions, and calibration files are already available,
+run:
 
 ```bash
 python evaluate_fixed_weight_platt_fusion.py
@@ -120,10 +197,13 @@ python evaluate_4view_fusion.py
 python organize_fusion_results.py
 ```
 
-For more details about the fixed-weight and OOF-search fusion families, see
-`FUSION_SCRIPTS.md`.
+Standardized fusion results are written under:
 
-## Frontend Inference
+```text
+outputs/results/competition/
+```
+
+## Local Frontend Inference
 
 Open the local GUI:
 
@@ -137,37 +217,46 @@ Run one image in headless mode:
 python frontend_app.py --image path/to/image.png
 ```
 
-The frontend writes local reports and generated images under `outputs/`.
+The frontend loads:
+
+```text
+outputs/models/segmentation/best.pt
+outputs/models/classification/*_best.pt
+outputs/results/competition/threshold_calibration.json
+```
+
+Generated reports and visual outputs are saved under `outputs/`.
 
 ## Tests
 
-Run the existing test suite from the repository root:
+Run the test suite from the repository root:
 
 ```bash
 pytest -q
 ```
 
-Some GUI-related tests require a working Tk installation. If Tk is missing or
-misconfigured in the active Python environment, run tests in an environment with
-Tk support.
+Some frontend tests require a working Tk installation in the active Python
+environment.
 
-## GitHub Upload Checklist
+## Reproducibility Notes
 
-Before creating the GitHub repository:
+- GitHub stores the reproducible code and documentation.
+- Baidu Netdisk stores the trained model weights and calibration file.
+- The dataset is not redistributed in this repository.
+- Large generated artifacts are ignored by Git through `.gitignore`.
+- To reproduce the submitted model outputs, place the downloaded weights in the
+  paths listed above, prepare the dataset locally, and run the evaluation or
+  full pipeline scripts.
 
-1. Review `.gitignore` and confirm `images/`, `outputs/`, and `checkpoints/`
-   are not staged.
-2. Remove private paths, usernames, and machine-specific notes from any files
-   you plan to publish.
-3. Confirm the repository contains code, docs, and lightweight metadata only.
-4. Choose a license if this project will be shared publicly.
-5. Run `git status --short` before committing.
+## Citation / Paper Statement
 
-Suggested first commit:
+When referencing this implementation in a report or paper, the following wording
+can be used:
 
-```bash
-git init
-git add .gitignore .gitattributes README.md requirements.txt FUSION_SCRIPTS.md data models tests *.py *.sh
-git status --short
-git commit -m "docs: prepare project for GitHub"
+```text
+The source code for model training, four-view construction, fusion evaluation,
+and visualization is available at:
+https://github.com/lhg020307-bot/breast-ultrasound-fcbformer-densenet121.
+Trained model weights are provided separately via Baidu Netdisk:
+https://pan.baidu.com/s/1LaTKuKrpvP3QYjHU4VIxTg?pwd=s2w8, extraction code s2w8.
 ```
